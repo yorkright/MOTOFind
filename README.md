@@ -1,4 +1,4 @@
-# Arclight — a real AI agent on Gemini + Next.js
+# MotoFind  — a real AI agent on Gemini + Next.js
 
 This is a working scaffold, not a toy demo: server-only API keys, real function
 calling (search + calculator), streaming responses, rate limiting, input
