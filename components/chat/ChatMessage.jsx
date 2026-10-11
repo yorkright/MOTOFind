@@ -40,7 +40,7 @@ export default function ChatMessage({ role, content, isLastAssistant, onRegenera
 
       <div className="min-w-0 flex-1">
         <div className="mb-1 font-mono text-[11px] font-semibold uppercase tracking-wide text-accent">
-          Arclight
+          MotoFind AI
         </div>
 
         <div className="rounded-2xl rounded-tl-sm border-2 border-accent/40 bg-[#111111] px-4 py-3">

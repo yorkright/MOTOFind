@@ -40,7 +40,7 @@ export default function Navbar() {
         </div>
 
         <a
-          href="/agent"
+          href="/chat"
           className="hidden rounded-full bg-ink px-4 py-2 text-sm font-medium text-base transition hover:bg-accent md:inline-block"
         >
           Open the agent

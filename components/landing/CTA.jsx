@@ -18,10 +18,10 @@ export default function CTA() {
         </div>
 
         <div className="relative">
-          <h2 className="font-display text-2xl font-semibold text-ink sm:text-3xl lg:text-4xl">
+          <h2 className="font-display text-2xl font-semibold text-accent sm:text-3xl lg:text-4xl">
             Your next car, found honestly.
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-sm text-muted sm:text-base">
+          <p className="mx-auto mt-4 max-w-xl text-sm text-muted lg:text-white sm:text-base">
             Arclight runs on your own Gemini API key, so there's no seat cost from us —
             you pay Google's usage pricing directly, and you can see exactly what each search costs.
           </p>

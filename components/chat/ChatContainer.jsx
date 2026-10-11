@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import Sidebar from "./Sidebar";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
+import { motion } from "framer-motion";
 import { MenuIcon, PlusIcon, SparkleIcon } from "./icons";
 import { useChatThreads } from "@/lib/chat/useChatThreads";
+import RoadDivider from "../landing/RoadDivider";
 
 export default function ChatContainer() {
   const {
@@ -109,13 +111,25 @@ export default function ChatContainer() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center gap-3 border-b border-border px-4 py-3 sm:px-6">
-          <button
-            onClick={() => setSidebarOpen((v) => !v)}
-            aria-label="Toggle sidebar"
-            className="rounded-lg p-2 text-muted transition hover:bg-surface hover:text-ink"
-          >
-            <MenuIcon className="h-5 w-5" />
-          </button>
+          {!sidebarOpen && (
+            <button
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open sidebar"
+              className="rounded-lg p-2 text-muted transition hover:bg-surface hover:text-accent"
+            >
+              <motion.div
+                className="h-5 w-5"
+                animate={{ scale: [1, 1.15, 1] }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              >
+                <MenuIcon className="h-5 w-5" />
+              </motion.div>
+            </button>
+          )}
 
           <div className="flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-base">
@@ -150,6 +164,13 @@ export default function ChatContainer() {
                   Tell me your budget, body type, or use case — I&apos;ll help
                   you narrow it down.
                 </p>
+                <br />
+                <div className="px-4 py-4 backdrop-blur sm:px-6">
+                  <RoadDivider />
+                  <div className="mx-auto w-full max-w-3xl mt-6 px-4 sm:px-6">
+                    <ChatInput onSend={handleSend} disabled={loading} />
+                  </div>
+                </div>
               </div>
             )}
 
@@ -189,11 +210,13 @@ export default function ChatContainer() {
           </div>
         )}
 
-        <div className="border-t border-border bg-black/60 px-4 py-4 backdrop-blur sm:px-6">
-          <div className="mx-auto w-full max-w-3xl">
-            <ChatInput onSend={handleSend} disabled={loading} />
+        {messages.length > 0 && (
+          <div className="border-t border-border bg-black/60 px-4 py-4 backdrop-blur sm:px-6">
+            <div className="mx-auto w-full max-w-3xl">
+              <ChatInput onSend={handleSend} disabled={loading} />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

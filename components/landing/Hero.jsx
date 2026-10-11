@@ -77,7 +77,7 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="mt-5 max-w-md text-base text-muted sm:mt-6 sm:text-lg"
           >
-            Tell Arclight your budget and what matters — mileage, boot space,
+            Tell MotoFind your budget and what matters — mileage, boot space,
             resale, whatever. It checks live listings and real specs before it
             answers, and shows you exactly what it found.
           </motion.p>
