@@ -8,6 +8,7 @@ const LINKS = [
   { href: "#how-it-works", label: "How it works" },
   { href: "#capabilities", label: "Capabilities" },
   { href: "#pricing", label: "Pricing" },
+  { href: "/news", label: "GearUp" },
 ];
 
 export default function Navbar() {
@@ -22,18 +23,26 @@ export default function Navbar() {
     >
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
         <a
-          href="#top"
+          href="/"
           onClick={() => setOpen(false)}
           className="flex items-center gap-2 font-display text-base font-semibold text-ink sm:text-lg"
         >
-          <Car className="h-4 w-4 shrink-0 text-accent" strokeWidth={2} aria-hidden="true" />
+          <Car
+            className="h-4 w-4 shrink-0 text-accent"
+            strokeWidth={2}
+            aria-hidden="true"
+          />
           Motofind
         </a>
 
         {/* Desktop links */}
         <div className="hidden items-center gap-8 text-sm text-muted md:flex">
           {LINKS.map((link) => (
-            <a key={link.href} href={link.href} className="transition hover:text-ink">
+            <a
+              key={link.href}
+              href={link.href}
+              className="transition hover:text-ink"
+            >
               {link.label}
             </a>
           ))}
