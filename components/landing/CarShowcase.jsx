@@ -19,7 +19,7 @@ const TYPES = [
     body: "For comfortable daily commutes and highway miles.",
     tag: "18–24 kmpl avg",
     imageUrl:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8D5WW72n7R7aLWEpP2M2reA-JvDdND62wUU8JsOcs3g&s=10",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpYCkB8W_F55Vgg-O8SBqqLDAJ8ykQe92bnLq7otpSWxlTE8UE-MyERC8&s=10",
   },
   {
     id: "suv",
