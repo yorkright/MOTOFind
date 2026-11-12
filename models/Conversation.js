@@ -9,6 +9,11 @@ const ConversationSchema = new mongoose.Schema(
             index: true,
         },
 
+        clerkUserId: {
+            type: String,
+            default: null,
+        },
+
         title: {
             type: String,
             default: "New Chat",
@@ -22,6 +27,11 @@ const ConversationSchema = new mongoose.Schema(
 
 ConversationSchema.index({
     sessionId: 1,
+    updatedAt: -1,
+});
+
+ConversationSchema.index({
+    clerkUserId: 1,
     updatedAt: -1,
 });
 

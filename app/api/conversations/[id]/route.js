@@ -1,12 +1,11 @@
 
-import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 
 import connectDB from "@/lib/db/mongodb";
 import Conversation from "@/models/Conversation";
 import Message from "@/models/Message";
 
-import { getOrCreateSession } from "@/lib/auth/session";
+import { getConversationOwner } from "@/lib/auth/conversationOwner";
 import { sessionJson } from "@/lib/auth/sessionResponse";
 
 export const runtime = "nodejs";
@@ -17,8 +16,8 @@ function isValidId(id) {
 
 // GET: Load one conversation and all its messages.
 export async function GET(request, { params }) {
-  const { sessionId } = getOrCreateSession(request);
-  const { id } = params;
+  const { sessionId, ownerFilter } = await getConversationOwner(request);
+  const { id } = await params;
 
   if (!isValidId(id)) {
     return sessionJson(
@@ -33,7 +32,7 @@ export async function GET(request, { params }) {
 
     const conversation = await Conversation.findOne({
       _id: id,
-      sessionId,
+      ...ownerFilter,
     }).lean();
 
     if (!conversation) {
@@ -81,8 +80,8 @@ export async function GET(request, { params }) {
 
 // PATCH: Rename one conversation.
 export async function PATCH(request, { params }) {
-  const { sessionId } = getOrCreateSession(request);
-  const { id } = params;
+  const { sessionId, ownerFilter } = await getConversationOwner(request);
+  const { id } = await params;
 
   if (!isValidId(id)) {
     return sessionJson(
@@ -113,7 +112,7 @@ export async function PATCH(request, { params }) {
     await connectDB();
 
     const conversation = await Conversation.findOneAndUpdate(
-      { _id: id, sessionId },
+      { _id: id, ...ownerFilter },
       { $set: { title: body.title.trim() } },
       { new: true, runValidators: true }
     );
@@ -150,8 +149,8 @@ export async function PATCH(request, { params }) {
 
 // DELETE: Delete one conversation and its messages.
 export async function DELETE(request, { params }) {
-  const { sessionId } = getOrCreateSession(request);
-  const { id } = params;
+  const { sessionId, ownerFilter } = await getConversationOwner(request);
+  const { id } = await params;
 
   if (!isValidId(id)) {
     return sessionJson(
@@ -166,7 +165,7 @@ export async function DELETE(request, { params }) {
 
     const conversation = await Conversation.findOne({
       _id: id,
-      sessionId,
+      ...ownerFilter,
     });
 
     if (!conversation) {
@@ -178,7 +177,10 @@ export async function DELETE(request, { params }) {
     }
 
     await Message.deleteMany({ conversationId: conversation._id });
-    await Conversation.deleteOne({ _id: conversation._id, sessionId });
+    await Conversation.deleteOne({
+      _id: conversation._id,
+      ...ownerFilter,
+    });
 
     return sessionJson(
       {
@@ -197,4 +199,3 @@ export async function DELETE(request, { params }) {
     );
   }
 }
-

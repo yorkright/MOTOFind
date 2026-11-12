@@ -1,4 +1,4 @@
-import mongoose, { mongo, Mongoose } from "mongoose";
+import mongoose from "mongoose";
 
 
 const MessageSchema = new mongoose.Schema(
@@ -9,6 +9,11 @@ const MessageSchema = new mongoose.Schema(
             required: true,
             index: true,
 
+        },
+
+        clerkUserId: {
+            type: String,
+            default: null,
         },
 
         role: {
@@ -29,6 +34,11 @@ const MessageSchema = new mongoose.Schema(
 MessageSchema.index({
     conversationId: 1,
     createdAt: 1,
+});
+
+MessageSchema.index({
+    clerkUserId: 1,
+    conversationId: 1,
 });
 
 const Message =

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { UserButton, useUser } from "@clerk/nextjs";
 import {
   CloseIcon,
   PlusIcon,
@@ -23,6 +24,7 @@ export default function Sidebar({
   onRenameThread,
   onClearAll,
 }) {
+  const { isLoaded, isSignedIn, user } = useUser();
   const [query, setQuery] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editValue, setEditValue] = useState("");
@@ -32,6 +34,9 @@ export default function Sidebar({
         t.title.toLowerCase().includes(query.trim().toLowerCase()),
       )
     : threads;
+  const email =
+    user?.primaryEmailAddress?.emailAddress ||
+    user?.emailAddresses?.[0]?.emailAddress;
 
   function startEdit(thread) {
     setEditingId(thread.id);
@@ -191,7 +196,10 @@ export default function Sidebar({
           </nav>
 
           <div className="space-y-1 border-t border-border px-3 py-3">
-            <a href="/news" className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-white transition hover:bg-black/20 hover:text-accent">
+            <a
+              href="/news"
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-white transition hover:bg-black/20 hover:text-accent"
+            >
               <SparkleIcon className="h-4 w-4 text-accent" />
               GearUp
             </a>
@@ -200,10 +208,29 @@ export default function Sidebar({
               Settings
             </button>
             <div className="flex items-center gap-2 rounded-xl px-3 py-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-base">
-                <SparkleIcon className="h-3.5 w-3.5" />
+              {isLoaded && isSignedIn ? (
+                <UserButton />
+              ) : (
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-base">
+                  <SparkleIcon className="h-3.5 w-3.5" />
+                </span>
+              )}
+              <span
+                className="truncate text-sm text-ink"
+                title={
+                  isLoaded
+                    ? isSignedIn
+                      ? email || user?.fullName || "Signed-in user"
+                      : "Guest user"
+                    : "Loading profile"
+                }
+              >
+                {!isLoaded
+                  ? "Loading profile"
+                  : isSignedIn
+                    ? email || user?.fullName || "Signed-in user"
+                    : "Guest user"}
               </span>
-              <span className="text-sm text-ink">Guest user</span>
             </div>
           </div>
         </div>

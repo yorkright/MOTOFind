@@ -1,12 +1,11 @@
 
-import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 
 import connectDB from "@/lib/db/mongodb";
 import Conversation from "@/models/Conversation";
 import Message from "@/models/Message";
 
-import { getOrCreateSession } from "@/lib/auth/session";
+import { getConversationOwner } from "@/lib/auth/conversationOwner";
 import { sessionJson } from "@/lib/auth/sessionResponse";
 
 export const runtime = "nodejs";
@@ -52,10 +51,10 @@ function validateMessages(messages, allowEmpty = false) {
   return null;
 }
 
-async function findOwnedConversation(id, sessionId) {
+async function findOwnedConversation(id, ownerFilter) {
   return Conversation.findOne({
     _id: id,
-    sessionId,
+    ...ownerFilter,
   });
 }
 
@@ -68,10 +67,12 @@ function formatMessages(messages) {
   }));
 }
 
+
 // POST: Save new messages to a conversation.
 export async function POST(request, { params }) {
-  const { sessionId } = getOrCreateSession(request);
-  const { id } = params;
+  const { sessionId, clerkUserId, ownerFilter } =
+    await getConversationOwner(request);
+  const { id } = await params;
 
   if (!isValidId(id)) {
     return sessionJson(
@@ -97,7 +98,7 @@ export async function POST(request, { params }) {
 
     await connectDB();
 
-    const conversation = await findOwnedConversation(id, sessionId);
+    const conversation = await findOwnedConversation(id, ownerFilter);
 
     if (!conversation) {
       return sessionJson(
@@ -109,6 +110,7 @@ export async function POST(request, { params }) {
 
     const messagesToSave = messages.map((message) => ({
       conversationId: conversation._id,
+      clerkUserId,
       role: message.role,
       content: message.content.trim(),
     }));
@@ -158,8 +160,9 @@ export async function POST(request, { params }) {
 // PUT: Replace the complete message history.
 // Used when regenerating an AI response or correcting conversation history.
 export async function PUT(request, { params }) {
-  const { sessionId } = getOrCreateSession(request);
-  const { id } = params;
+  const { sessionId, clerkUserId, ownerFilter } =
+    await getConversationOwner(request);
+  const { id } = await params;
 
   if (!isValidId(id)) {
     return sessionJson(
@@ -185,7 +188,7 @@ export async function PUT(request, { params }) {
 
     await connectDB();
 
-    const conversation = await findOwnedConversation(id, sessionId);
+    const conversation = await findOwnedConversation(id, ownerFilter);
 
     if (!conversation) {
       return sessionJson(
@@ -206,6 +209,7 @@ export async function PUT(request, { params }) {
     if (messages.length > 0) {
       const messagesToSave = messages.map((message) => ({
         conversationId: conversation._id,
+        clerkUserId,
         role: message.role,
         content: message.content.trim(),
       }));

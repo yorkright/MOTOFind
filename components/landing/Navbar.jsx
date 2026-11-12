@@ -3,6 +3,12 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Car, Menu, X } from "lucide-react";
+import {
+  Show,
+  SignInButton,
+  SignUpButton,
+  UserButton,
+} from "@clerk/nextjs";
 
 const LINKS = [
   { href: "#how-it-works", label: "How it works" },
@@ -48,12 +54,35 @@ export default function Navbar() {
           ))}
         </div>
 
-        <a
-          href="/chat"
-          className="hidden rounded-full bg-ink px-4 py-2 text-sm font-medium text-base transition hover:bg-accent md:inline-block"
-        >
-          Open the agent
-        </a>
+        <div className="hidden items-center gap-3 md:flex">
+          <Show when="signed-out">
+            <SignInButton mode="modal" fallbackRedirectUrl="/chat">
+              <button
+                type="button"
+                className="rounded-full px-3 py-2 text-sm font-medium text-muted transition hover:text-ink"
+              >
+                Log in
+              </button>
+            </SignInButton>
+            <SignUpButton mode="modal" fallbackRedirectUrl="/chat">
+              <button
+                type="button"
+                className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-base transition hover:bg-accent"
+              >
+                Sign up
+              </button>
+            </SignUpButton>
+          </Show>
+          <Show when="signed-in">
+            <a
+              href="/chat"
+              className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-base transition hover:bg-accent"
+            >
+              Open the agent
+            </a>
+            <UserButton />
+          </Show>
+        </div>
 
         {/* Mobile menu toggle */}
         <button
@@ -88,13 +117,38 @@ export default function Navbar() {
                   {link.label}
                 </a>
               ))}
-              <a
-                href="/agent"
-                onClick={() => setOpen(false)}
-                className="mt-2 rounded-full bg-accent px-4 py-2.5 text-center text-sm font-semibold text-base"
-              >
-                Open the agent
-              </a>
+              <Show when="signed-out">
+                <SignInButton mode="modal" fallbackRedirectUrl="/chat">
+                  <button
+                    type="button"
+                    onClick={() => setOpen(false)}
+                    className="mt-2 rounded-full border border-border px-4 py-2.5 text-center text-sm font-semibold text-ink"
+                  >
+                    Log in
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal" fallbackRedirectUrl="/chat">
+                  <button
+                    type="button"
+                    onClick={() => setOpen(false)}
+                    className="rounded-full bg-accent px-4 py-2.5 text-center text-sm font-semibold text-base"
+                  >
+                    Sign up
+                  </button>
+                </SignUpButton>
+              </Show>
+              <Show when="signed-in">
+                <a
+                  href="/chat"
+                  onClick={() => setOpen(false)}
+                  className="mt-2 rounded-full bg-accent px-4 py-2.5 text-center text-sm font-semibold text-base"
+                >
+                  Open the agent
+                </a>
+                <div className="flex justify-center py-2">
+                  <UserButton />
+                </div>
+              </Show>
             </div>
           </motion.div>
         )}

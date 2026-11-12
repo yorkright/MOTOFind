@@ -1,23 +1,21 @@
 
-import { NextResponse } from "next/server";
-
 import connectDB from "@/lib/db/mongodb";
 import Conversation from "@/models/Conversation";
 import Message from "@/models/Message";
 
-import { getOrCreateSession } from "@/lib/auth/session";
+import { getConversationOwner } from "@/lib/auth/conversationOwner";
 import { sessionJson } from "@/lib/auth/sessionResponse";
 
 export const runtime = "nodejs";
 
-// GET: List conversations belonging to this browser session.
+// GET: List conversations belonging to the current Clerk user or guest session.
 export async function GET(request) {
-  const { sessionId } = getOrCreateSession(request);
+  const { sessionId, ownerFilter } = await getConversationOwner(request);
 
   try {
     await connectDB();
 
-    const conversations = await Conversation.find({ sessionId })
+    const conversations = await Conversation.find(ownerFilter)
       .sort({ updatedAt: -1 })
       .select("_id title createdAt updatedAt")
       .lean();
@@ -46,7 +44,7 @@ export async function GET(request) {
 
 // POST: Create a new conversation.
 export async function POST(request) {
-  const { sessionId } = getOrCreateSession(request);
+  const { sessionId, clerkUserId } = await getConversationOwner(request);
 
   try {
     const body = await request.json().catch(() => ({}));
@@ -60,6 +58,7 @@ export async function POST(request) {
 
     const conversation = await Conversation.create({
       sessionId,
+      clerkUserId,
       title,
     });
 
@@ -88,14 +87,14 @@ export async function POST(request) {
   }
 }
 
-// DELETE: Delete all conversations belonging to this session.
+// DELETE: Delete all conversations belonging to the current owner.
 export async function DELETE(request) {
-  const { sessionId } = getOrCreateSession(request);
+  const { sessionId, ownerFilter } = await getConversationOwner(request);
 
   try {
     await connectDB();
 
-    const conversations = await Conversation.find({ sessionId })
+    const conversations = await Conversation.find(ownerFilter)
       .select("_id")
       .lean();
 
@@ -108,7 +107,7 @@ export async function DELETE(request) {
         conversationId: { $in: conversationIds },
       });
 
-      await Conversation.deleteMany({ sessionId });
+      await Conversation.deleteMany(ownerFilter);
     }
 
     return sessionJson(
