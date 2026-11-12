@@ -22,6 +22,7 @@ export default function ChatContainer() {
     renameThread,
     appendMessages,
     setThreadMessages,
+    isLoadingThreads,
   } = useChatThreads();
 
   // Closed by default on every device, every refresh — opens only when the
@@ -68,53 +69,127 @@ export default function ChatContainer() {
     });
   }, [activeThread?.messages, loading]);
 
-  async function callAgent(messages) {
+  async function callAgent(messages, threadId) {
     setError(null);
     setLoading(true);
+
     try {
       const res = await fetch("/api/agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages }),
       });
+
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Something went wrong.");
-      appendMessages(activeThreadId, [
-        { role: "assistant", content: data.reply },
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Something went wrong.");
+      }
+
+      if (typeof data.reply !== "string" || !data.reply.trim()) {
+        throw new Error("The assistant returned an empty response.");
+      }
+
+      // Save the assistant response before considering the operation complete.
+      await appendMessages(threadId, [
+        {
+          role: "assistant",
+          content: data.reply,
+        },
       ]);
     } catch (err) {
-      setError(err.message || "Failed to reach the assistant.");
+      console.error("[ChatContainer] Agent error:", err);
+
+      setError(
+        err.message || "Failed to reach the assistant or save its response.",
+      );
     } finally {
       setLoading(false);
     }
   }
 
   async function handleSend(content) {
-    const userMessage = { role: "user", content };
-    const nextMessages = [...activeThread.messages, userMessage];
-    appendMessages(activeThreadId, [userMessage]);
-    await callAgent(nextMessages);
-  }
-
-  async function handleRegenerate() {
-    const messages = activeThread.messages;
-    let lastUserIdx = -1;
-    for (let i = messages.length - 1; i >= 0; i--) {
-      if (messages[i].role === "user") {
-        lastUserIdx = i;
-        break;
-      }
+    if (!content?.trim() || loading || isLoadingThreads) {
+      return;
     }
-    if (lastUserIdx === -1) return;
-    const trimmed = messages.slice(0, lastUserIdx + 1);
-    setThreadMessages(activeThreadId, trimmed);
-    await callAgent(trimmed);
+
+    const userMessage = {
+      role: "user",
+      content: content.trim(),
+    };
+
+    const nextMessages = [...activeThread.messages, userMessage];
+
+    setError(null);
+    setLoading(true);
+
+    try {
+      const threadId = activeThreadId || await createThread();
+
+      // Step 1: Save the user's message.
+      await appendMessages(threadId, [userMessage]);
+
+      // Step 2: Ask the agent using the complete conversation history.
+      await callAgent(nextMessages, threadId);
+    } catch (err) {
+      console.error("[ChatContainer] Failed to send message:", err);
+
+      setError(
+        err.message || "Your message could not be saved. Please try again.",
+      );
+      setLoading(false);
+    }
   }
 
-  function handleNewChat() {
-    createThread();
-    setSidebarOpen(false);
+ async function handleRegenerate() {
+  if (!activeThreadId || loading || isLoadingThreads) return;
+
+  const currentMessages = activeThread.messages || [];
+
+  let lastUserIdx = -1;
+
+  for (let i = currentMessages.length - 1; i >= 0; i--) {
+    if (currentMessages[i].role === "user") {
+      lastUserIdx = i;
+      break;
+    }
   }
+
+  if (lastUserIdx === -1) return;
+
+  const trimmed = currentMessages.slice(0, lastUserIdx + 1);
+
+  setError(null);
+  setLoading(true);
+
+  try {
+    // Replace database history, removing the previous assistant response.
+    await setThreadMessages(activeThreadId, trimmed);
+
+    // Generate and save the replacement response.
+    await callAgent(trimmed, activeThreadId);
+  } catch (err) {
+    console.error("[ChatContainer] Regeneration failed:", err);
+
+    setError(
+      err.message || "Failed to regenerate the assistant response."
+    );
+    setLoading(false);
+  }
+}
+
+
+async function handleNewChat() {
+  setError(null);
+
+  try {
+    await createThread();
+    setSidebarOpen(false);
+  } catch (err) {
+    console.error("[ChatContainer] Failed to create chat:", err);
+    setError(err.message || "Failed to create a new conversation.");
+  }
+}
 
   function handleSelectThread(id) {
     selectThread(id);
@@ -214,7 +289,7 @@ export default function ChatContainer() {
                   <div className="px-4 py-4 backdrop-blur sm:px-6">
                     <RoadDivider />
                     <div className="mx-auto w-full max-w-3xl mt-6 px-4 sm:px-6">
-                      <ChatInput onSend={handleSend} disabled={loading} />
+                      <ChatInput onSend={handleSend} disabled={loading || isLoadingThreads} />
                     </div>
                   </div>
                 </div>
@@ -267,10 +342,13 @@ export default function ChatContainer() {
                     </p>
                   )}
 
-                   <a href="/news" className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-white transition hover:bg-black/20 hover:text-accent">
-              <SparkleIcon className="h-4 w-4 text-accent" />
-              More
-            </a>
+                  <a
+                    href="/news"
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-white transition hover:bg-black/20 hover:text-accent"
+                  >
+                    <SparkleIcon className="h-4 w-4 text-accent" />
+                    More
+                  </a>
                 </aside>
               </>
             )}

@@ -43,6 +43,10 @@ cp .env.local.example .env.local
 npm run dev
 ```
 
+- If Node.js cannot resolve MongoDB Atlas SRV records through the system DNS,
+  set `MONGODB_DNS_SERVERS` in `.env.local` to a comma-separated list of
+  trusted DNS server addresses. This overrides DNS resolution process-wide for
+  the Node.js app.
 - Get a Gemini key at https://aistudio.google.com/apikey
 - Get a free Tavily key at https://tavily.com — without it, the agent still
   works, `web_search` just returns a clean "not configured" error the model

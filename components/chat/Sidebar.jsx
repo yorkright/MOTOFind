@@ -193,7 +193,7 @@ export default function Sidebar({
           <div className="space-y-1 border-t border-border px-3 py-3">
             <a href="/news" className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-white transition hover:bg-black/20 hover:text-accent">
               <SparkleIcon className="h-4 w-4 text-accent" />
-              CarPluse
+              GearUp
             </a>
             <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-muted transition hover:bg-black/20 hover:text-ink">
               <SettingsIcon className="h-4 w-4" />
