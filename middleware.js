@@ -1,30 +1,59 @@
 import { clerkMiddleware } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
 
-export default clerkMiddleware(async (auth, request) => {
+const isProtectedRoute = (pathname) =>
+  pathname === '/chat' ||
+  pathname.startsWith('/chat/') ||
+  pathname === '/news' ||
+  pathname.startsWith('/news/');
+
+const hasClerkKeys =
+  Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) &&
+  Boolean(process.env.CLERK_SECRET_KEY);
+
+const handleAuthenticatedRequest = async (auth, request) => {
   const { pathname } = request.nextUrl;
-  const requiresSignIn =
-    pathname === '/chat' ||
-    pathname.startsWith('/chat/') ||
-    pathname === '/news' ||
-    pathname.startsWith('/news/');
 
-  if (requiresSignIn) {
-    const signInUrl = new URL('/sign-in', request.url);
+  if (isProtectedRoute(pathname)) {
+    const signInUrl = request.nextUrl.clone();
+    signInUrl.pathname = '/sign-in';
+    signInUrl.search = '';
+    signInUrl.hash = '';
     signInUrl.searchParams.set('redirect_url', request.url);
 
     await auth.protect(undefined, {
       unauthenticatedUrl: signInUrl.toString(),
     });
   }
-});
+};
+
+const clerkHandler = clerkMiddleware(handleAuthenticatedRequest);
+
+export default async function middleware(request, event) {
+  if (!hasClerkKeys) {
+    return NextResponse.json(
+      { error: 'Authentication is not configured. Contact the site administrator.' },
+      { status: 503 },
+    );
+  }
+
+  try {
+    return await clerkHandler(request, event);
+  } catch (error) {
+    console.error('Clerk middleware failed:', error);
+    return NextResponse.json(
+      { error: 'Authentication is temporarily unavailable.' },
+      { status: 503 },
+    );
+  }
+}
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for Clerk's auto-proxy path
+    // Only run on authenticated pages and Clerk's optional auto-proxy path.
+    // This excludes Next.js assets, public pages, sign-in, and API routes.
+    '/chat/:path*',
+    '/news/:path*',
     '/__clerk/:path*',
-    // Always run for API routes
-    '/(api|trpc)(.*)',
   ],
 };
