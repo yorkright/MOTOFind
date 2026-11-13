@@ -50,10 +50,10 @@ export default async function middleware(request, event) {
 
 export const config = {
   matcher: [
-    // Only run on authenticated pages and Clerk's optional auto-proxy path.
-    // This excludes Next.js assets, public pages, sign-in, and API routes.
+    // Run on authenticated pages, Clerk auth consumers, and its optional auto-proxy path.
     '/chat/:path*',
     '/news/:path*',
+    '/api/conversations/:path*',
     '/__clerk/:path*',
   ],
 };
